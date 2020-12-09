@@ -143,7 +143,7 @@
         var month = ts[1];
         var days = ts[2];
         var beginDate = year + "" + pad(month) + "" + pad(days[0]) + "000000";
-        var endDate = year + "" + pad(month) + "" + pad(days[days.length-1]) + "000000";
+        var endDate = year + "" + pad(month) + "" + pad(days[days.length-1]) + "230000";
 
         var url = api_url + "format=json&tz=utc&timeformat=xml&precision=double&missingtext=null"+
            "&areas="+domain+"&param=name,time"+paramstr+"&starttime="+beginDate+
