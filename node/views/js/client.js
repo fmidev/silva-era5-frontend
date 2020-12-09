@@ -416,6 +416,25 @@ TODO
 
         };
 
+				// sometimes boxplot y axis scaling is not optimal... some values are extending
+				// outside the graph. calculate data range and feed it to chartjs to fix this 
+				// issue.
+				var realMin = 1000000;
+				var realMax = -1000000;
+				const minop = getAreaAggregation("min");
+				const maxop = getAreaAggregation("max");
+
+        for (var k = 0; k < data.length; k++) {
+					for (var i = 0; i < data[k].y.length; i++) {
+						for (var j = 0; j < data[k].y[i].data.length; j++) {
+  						var newMin = minop(data[k].y[i].data[j]);
+		  				if (newMin < realMin) realMin = newMin;
+							var newMax = maxop(data[k].y[i].data[j]);
+							if (newMax > realMax) realMax = newMax;
+						}
+					}
+				}
+
         myChart = new Chart(ctx, {
           data: {
             labels: data[0].x,
@@ -425,7 +444,6 @@ TODO
               for (var k = 0; k < data.length; k++) {
                 for (var i = 0; i < data[k].y.length; i++) {
                   var multipleData = (Array.isArray(data[k].y[0].data[0]) && data[k].y[0].data[0].length > 1);
-
                   sets.push({
                     label: displayName(data[k].y[i].label + ", " + data[k].domain),
                     data: data[k].y[i].data,
@@ -452,7 +470,9 @@ TODO
               }],
               yAxes: [{
                 ticks: {
-                  beginAtZero: false
+                  beginAtZero: false,
+									suggestedMin: realMin,
+									suggestedMax: realMax
                 }
               }]
             },
