@@ -13,7 +13,7 @@
 
       $('#queryButton').on('click', function (e) {
         if ($("#era").data("changed") == false) {
-      	  var accumulated = JSON.parse(sessionStorage.getItem('data'));
+          var accumulated = JSON.parse(sessionStorage.getItem('data'));
           var filtered = filterData(accumulated);
           updateChart(filtered);
           updateTable(filtered, Object.keys(accumulated[0]).map(function(prop) { return prop; }));
@@ -91,7 +91,7 @@
 
         var dates = [];
         var accumulated = []; // this is where we collect the full data 
-      	                      // as it's fetched from server
+                              // as it's fetched from server
 
         years.forEach(y => 
           months.forEach(m => 
@@ -207,7 +207,7 @@
             if (!labels.includes(data[j]['time'])) {
               // new data for this time
               labels.push(data[j]['time']);
-       	      paramData.data.push(parsed);
+               paramData.data.push(parsed);
             }
             else {
               // merging data from for example one area with another
@@ -231,7 +231,7 @@
       function filterData(data) {
         filtered = preprocess(data);
         console.log(filtered)
-      	filtered = areaAggregate($("#areaAggregation").val(), filtered);
+        filtered = areaAggregate($("#areaAggregation").val(), filtered);
         console.log(filtered)
         filtered = timeAggregate($("#timeAggregation").val(), filtered);
 
@@ -253,9 +253,9 @@
       }
 
       function parameterUnion(data) {
-				var ret = [];
+        var ret = [];
 
-				for (var k = 0; k < data.length; k++) {
+        for (var k = 0; k < data.length; k++) {
  
           var labels = [];
           var y = [];
@@ -283,7 +283,7 @@
               }
             }
           }
-					ret.push({ 'domain': data[k].domain, 'x': labels, 'y': y });
+          ret.push({ 'domain': data[k].domain, 'x': labels, 'y': y });
         }
         return ret
       }
@@ -298,10 +298,10 @@
       function areaAggregate(str, data) {
         if (str == "none") return data;
 
-       	var op = getAreaAggregation(str);
+         var op = getAreaAggregation(str);
         var ret = []
         for (var k = 0; k < data.length; k++) {
-				  var aggregated = { 'domain': data[k].domain, 'x': data[k].x, 'y': [] };
+          var aggregated = { 'domain': data[k].domain, 'x': data[k].x, 'y': [] };
 
           for (var i = 0; i < data[k].y.length; i++) {
             var flt = {'label' : data[k].y[i].label, 'data': []}
@@ -416,31 +416,31 @@ TODO
 
         };
 
-				// sometimes boxplot y axis scaling is not optimal... some values are extending
-				// outside the graph. calculate data range and feed it to chartjs to fix this 
-				// issue.
-				var realMin = 1000000;
-				var realMax = -1000000;
-				const minop = getAreaAggregation("min");
-				const maxop = getAreaAggregation("max");
+        // sometimes boxplot y axis scaling is not optimal... some values are extending
+        // outside the graph. calculate data range and feed it to chartjs to fix this 
+        // issue.
+        var realMin = 1000000;
+        var realMax = -1000000;
+        const minop = getAreaAggregation("min");
+        const maxop = getAreaAggregation("max");
 
         for (var k = 0; k < data.length; k++) {
-					for (var i = 0; i < data[k].y.length; i++) {
-						for (var j = 0; j < data[k].y[i].data.length; j++) {
-  						var newMin = minop(data[k].y[i].data[j]);
-		  				if (newMin < realMin) realMin = newMin;
-							var newMax = maxop(data[k].y[i].data[j]);
-							if (newMax > realMax) realMax = newMax;
-						}
-					}
-				}
+          for (var i = 0; i < data[k].y.length; i++) {
+            for (var j = 0; j < data[k].y[i].data.length; j++) {
+              var newMin = minop(data[k].y[i].data[j]);
+              if (newMin < realMin) realMin = newMin;
+              var newMax = maxop(data[k].y[i].data[j]);
+              if (newMax > realMax) realMax = newMax;
+            }
+          }
+        }
 
         myChart = new Chart(ctx, {
           data: {
             labels: data[0].x,
             datasets: function(data) {
               var sets = [];
-       	      var ci = 0; // color index
+               var ci = 0; // color index
               for (var k = 0; k < data.length; k++) {
                 for (var i = 0; i < data[k].y.length; i++) {
                   var multipleData = (Array.isArray(data[k].y[0].data[0]) && data[k].y[0].data[0].length > 1);
@@ -471,8 +471,8 @@ TODO
               yAxes: [{
                 ticks: {
                   beginAtZero: false,
-									suggestedMin: realMin,
-									suggestedMax: realMax
+                  suggestedMin: realMin,
+                  suggestedMax: realMax
                 }
               }]
             },
@@ -607,9 +607,7 @@ TODO
       mkAreas.initialize();
 
       function addBloodHound(element) {
-
-        //$("#domain" + i).typeahead({
-       	$(element).typeahead({
+        $(element).typeahead({
           hint: true,
           highlight: true,
           minLength: 1
@@ -662,20 +660,19 @@ TODO
             clone.children().each(function() {
               this.id = this.id.replace(next - 1, next);
             });
-						// rename elements
+            // rename elements
             clone.find("#domain" + (next-1)).attr('id', 'domain' + next);
             clone.find("#domain" + (next-1) + "Label").attr('id', 'domain' + next + "Label");
             // reset value and set default 'hint text'
-       	    clone.find("#domain" + (next)).val("");
-       	    clone.find("#domain" + (next)).typeahead('val', "Value of interest");
+            clone.find("#domain" + (next)).val("");
+            clone.find("#domain" + (next)).typeahead('val', "Value of interest");
             clone.change(function() { $("#era").data("changed",true); })
 
             last.after(clone);
             $("#domain" + next + "Label").remove();
             $("#era").data("changed",true);
-       	    addBloodHound('#domain' + next)
-
-	        }
+            addBloodHound('#domain' + next)
+          }
         };
 
         document.getElementById('delArea').onclick = function() {
