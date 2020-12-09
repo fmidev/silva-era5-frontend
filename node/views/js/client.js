@@ -306,7 +306,7 @@
       function areaAggregate(str, data) {
         if (str == "none") return data;
 
-         var op = getAreaAggregation(str);
+        var op = getAreaAggregation(str);
         var ret = []
         for (var k = 0; k < data.length; k++) {
           var aggregated = { 'domain': data[k].domain, 'x': data[k].x, 'y': [] };
@@ -314,7 +314,7 @@
           for (var i = 0; i < data[k].y.length; i++) {
             var flt = {'label' : data[k].y[i].label, 'data': []}
             for (var j = 0; j < data[k].y[i].data.length; j++) {
-              flt.data.push(op(data[k].y[i].data[j]));
+              flt.data.push([op(data[k].y[i].data[j])]);
             }
             aggregated.y.push(flt)
           }
@@ -472,7 +472,7 @@ TODO
                   });
                   ci++;
                 }
-              }console.log(sets)
+              }
               return sets;
             }(data),
           },
