@@ -159,38 +159,55 @@
       }
 
       function preprocess(data) {
+
+        var findFiltered = function(list, domain) {
+          for (var i = 0; i < list.length; i++) {
+            if (list[i].domain == domain) { return list[i]; }
+					}
+				  list.push({ x: [], y: [], domain: domain });
+					return list[list.length - 1];
+				};
+
+        var findParamData = function(filtered, param) {
+          for (var i = 0; i < filtered.y.length; i++) {
+            if (filtered.y[i].label == param) { return filtered.y[i]; }
+					}
+				  filtered.y.push({ 'label' : param, 'data': [] });
+					return filtered.y[filtered.y.length - 1];
+				};
+
         var filteredList = []
-        var filtered = { x: null, y: [], domain: null};
+        var filtered = null; //findFiltered(filteredList, null); //{ x: null, y: [], domain: null};
         var areaMerge = $('#areaMerge').is(':checked');
 
         var paramNames = Object.keys(data[0])
         for (var i = 2; i < paramNames.length; i++) {
           var param = paramNames[i];
-          var paramData = {};
-          paramData['label'] = param;
-          paramData['data'] = []
-          var labels = [];
+          var paramData = null;
+          var labels = null;
           var domain = "";
+
           for (var j = 0; j < data.length; j++) {
             domain = data[j]['name'];
 
-            if (filtered['domain'] === null) {
-              filtered['domain'] = domain;
+            if (filtered === null) {
+              filtered = findFiltered(filteredList, domain);
+            }
+
+            labels = filtered.x;
+
+            if (paramData === null) {
+              paramData = findParamData(filtered, param);
             }
             if (areaMerge && filtered['domain'].search(domain) == -1) {
               filtered['domain'] += "," + domain
             }
 
             if (!areaMerge && filtered['domain'] !== null && filtered['domain'] != domain) {
-              // Area has changed, start a new dataset
-              if (filtered['x'] === null) {
-                filtered['x'] = labels;
-              }
-              if (paramData['data'].length > 0) filtered.y.push($.extend(true, {}, paramData));
-              paramData['data'] = []
-              filteredList.push($.extend(true, {}, filtered))
-              filtered = { x: null, y: [], domain: domain};
-              labels = [];
+              // Area has changed, start a new dataset or use an older one if exists
+              filtered = findFiltered(filteredList, domain) //{ x: null, y: [], domain: domain};
+              paramData = findParamData(filtered, param)
+              labels = filtered.x;
             }
 
             var current = data[j][param];
@@ -199,7 +216,7 @@
             if (current === null || current == "null") {
               parsed = [];
             } else if (typeof(current) == "string") {
-               parsed = removeNulls(JSON.parse(current.replace(/ /g, ",")).filter(function(value) { return !Number.isNaN(value); }));
+              parsed = removeNulls(JSON.parse(current.replace(/ /g, ",")).filter(function(value) { return !Number.isNaN(value); }));
             } else {
               parsed = [current];
             }
@@ -207,7 +224,7 @@
             if (!labels.includes(data[j]['time'])) {
               // new data for this time
               labels.push(data[j]['time']);
-               paramData.data.push(parsed);
+              paramData.data.push(parsed);
             }
             else {
               // merging data from for example one area with another
@@ -215,14 +232,7 @@
               paramData.data[idx] = paramData.data[idx].concat(parsed);
             }
           }
-
-          if (filtered['x'] === null) {
-            filtered['x'] = labels;
-          }
-
-          if (paramData['data'].length > 0) filtered.y.push(paramData);
         }
-        filteredList.push(filtered)
 
         return filteredList;
       }
@@ -230,12 +240,10 @@
 
       function filterData(data) {
         filtered = preprocess(data);
-        console.log(filtered)
         filtered = areaAggregate($("#areaAggregation").val(), filtered);
-        console.log(filtered)
         filtered = timeAggregate($("#timeAggregation").val(), filtered);
-
-        if ($('#parameterUnion').is(':checked')) filtered = parameterUnion(filtered);
+        if ($('#parameterUnion').is(':checked') && $("#inputParameter1").val() !== undefined) filtered = parameterUnion(filtered);
+        console.log(filtered)
 
         return filtered;
       }
@@ -443,10 +451,17 @@ TODO
                var ci = 0; // color index
               for (var k = 0; k < data.length; k++) {
                 for (var i = 0; i < data[k].y.length; i++) {
-                  var multipleData = (Array.isArray(data[k].y[0].data[0]) && data[k].y[0].data[0].length > 1);
+//                  var multipleData = Array.isArray(data[k].y[0].data[0]) && data[k].y[0].data[0].length > 1;
+                  var multipleData = (function(data) { 
+                    var ret = false; // default single point data (line plot)
+                    for (var i = 0; i < data.data.length; i++) {
+                      if (data.data[i].length > 1) { ret = true; break; }
+                    }
+                    return ret;
+                  })(data[k].y[i])
                   sets.push({
                     label: displayName(data[k].y[i].label + ", " + data[k].domain),
-                    data: data[k].y[i].data,
+                    data: (data[k].y[i].data.length > 0 ? data[k].y[i].data : null),
                     lineTension: 0.3,
                     borderWidth: 2,
                     backgroundColor: function() { return (multipleData) ? color(ci, 0.1) : 'transparent'; }(),
@@ -457,7 +472,7 @@ TODO
                   });
                   ci++;
                 }
-              }
+              }console.log(sets)
               return sets;
             }(data),
           },
