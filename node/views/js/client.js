@@ -163,28 +163,29 @@
         var findFiltered = function(list, domain) {
           for (var i = 0; i < list.length; i++) {
             if (list[i].domain == domain) { return list[i]; }
-					}
-				  list.push({ x: [], y: [], domain: domain });
-					return list[list.length - 1];
-				};
+          }
+          list.push({ x: [], y: [], domain: domain });
+          return list[list.length - 1];
+        };
 
-        var findParamData = function(filtered, param) {
+        var findParamData = function(filtered, param, len) {
           for (var i = 0; i < filtered.y.length; i++) {
             if (filtered.y[i].label == param) { return filtered.y[i]; }
-					}
-				  filtered.y.push({ 'label' : param, 'data': [] });
-					return filtered.y[filtered.y.length - 1];
-				};
+          }
+          datarr = []
+          for (var i = 0; i < len; i++) { datarr.push([]); }
+          filtered.y.push({ 'label' : param, 'data': datarr });
+          return filtered.y[filtered.y.length - 1];
+        };
 
         var filteredList = []
-        var filtered = null; //findFiltered(filteredList, null); //{ x: null, y: [], domain: null};
+        var filtered = null;
         var areaMerge = $('#areaMerge').is(':checked');
 
         var paramNames = Object.keys(data[0])
         for (var i = 2; i < paramNames.length; i++) {
           var param = paramNames[i];
           var paramData = null;
-          var labels = null;
           var domain = "";
 
           for (var j = 0; j < data.length; j++) {
@@ -194,10 +195,8 @@
               filtered = findFiltered(filteredList, domain);
             }
 
-            labels = filtered.x;
-
             if (paramData === null) {
-              paramData = findParamData(filtered, param);
+              paramData = findParamData(filtered, param, filtered.x.length);
             }
             if (areaMerge && filtered['domain'].search(domain) == -1) {
               filtered['domain'] += "," + domain
@@ -206,8 +205,7 @@
             if (!areaMerge && filtered['domain'] !== null && filtered['domain'] != domain) {
               // Area has changed, start a new dataset or use an older one if exists
               filtered = findFiltered(filteredList, domain) //{ x: null, y: [], domain: domain};
-              paramData = findParamData(filtered, param)
-              labels = filtered.x;
+              paramData = findParamData(filtered, param, filtered.x.length)
             }
 
             var current = data[j][param];
@@ -221,14 +219,14 @@
               parsed = [current];
             }
 
-            if (!labels.includes(data[j]['time'])) {
+            if (!filtered.x.includes(data[j]['time'])) {
               // new data for this time
-              labels.push(data[j]['time']);
+              filtered.x.push(data[j]['time']);
               paramData.data.push(parsed);
             }
             else {
               // merging data from for example one area with another
-              var idx = labels.indexOf(data[j]['time']);
+              var idx = filtered.x.indexOf(data[j]['time']);
               paramData.data[idx] = paramData.data[idx].concat(parsed);
             }
           }
@@ -299,7 +297,7 @@
       function getAreaAggregation(str) {
         if (str == "min") return function(data) { return Math.min.apply(Math, data.map(function(o) { return o == null ? +Infinity : o; })); };
         if (str == "max") return function(data) { return Math.max.apply(Math, data.map(function(o) { return o == null ? -Infinity : o; })); };
-        if (str == "mean") return function(data) { return data.reduce(function(acc, val) { return acc + val; }, 0) / data.length; };
+        if (str == "mean") return function(data) { var val = data.reduce(function(acc, val) { return acc + val; }, 0) / data.length; if (val == val) return val; return null; };
         if (str == "none") return function(data) { return data; };
       }
 
@@ -314,7 +312,7 @@
           for (var i = 0; i < data[k].y.length; i++) {
             var flt = {'label' : data[k].y[i].label, 'data': []}
             for (var j = 0; j < data[k].y[i].data.length; j++) {
-              flt.data.push([op(data[k].y[i].data[j])]);
+              flt.data.push(removeNulls([op(data[k].y[i].data[j])]));
             }
             aggregated.y.push(flt)
           }
@@ -349,8 +347,8 @@
             y.push({label: data[k].y[i].label, data: []})
 
             var label = data[k].x[0];
-            var curday = date_trunc(timeRes, data[k].x[0]);
-            var dayvals = [];
+            var curday = date_trunc(timeRes, label);
+            var dayvals = []; // accumulate values here, we lose the structure of the grid!
 
             // loop over each data/time pair
             for (var j = 0; j < data[k].y[i].data.length; j++) {
@@ -359,42 +357,24 @@
 
               if (day == curday) { 
                 if (Array.isArray(vals)) {
-                  for (var l = 0; l < vals.length; l++) {
-                    if (dayvals.length < vals.length) {
-                      for (var m = dayvals.length; m < vals.length; m++) {
-                        dayvals.push([]);
-                      }
-                    }
-                    dayvals[l].push(vals[l]);
-                  }
+                  dayvals = dayvals.concat(removeNulls(vals))
                 }
-                else {
+                else if (vals != null) {
                   dayvals.push(vals); 
                 }
               } else { 
                 labels.push(label); 
                 label = data[k].x[j]; 
                 curday = day;
-                aggs = [];
-                if (Array.isArray(dayvals[0])) {
-                  for (var l = 0; l < dayvals.length; l++) { 
-                    aggs.push(getAreaAggregation(aggOp)(dayvals[l]));
-                  }
-                } else {
-                  aggs = getAreaAggregation(aggOp)(dayvals);
-                }
-                y[i].data.push(aggs);
+
+                y[i].data.push([getAreaAggregation(aggOp)(dayvals)]);
                 dayvals = [];
               }
             }
-/*
-TODO
-          for (var k = 0; k < dayvals.length; k++) { 
-            aggs.push(getAreaAggregation(str)(dayvals[k]));
-          }
-         
-          labels.push(label); // y[i].data.push([getAreaAggregation(str)(dayvals)]);
-*/
+
+            labels.push(label);
+            y[i].data.push([getAreaAggregation(aggOp)(dayvals)]);
+
           }
           ret.push({x : labels, y: y, domain: data[k].domain});
 
@@ -413,9 +393,162 @@ TODO
           myChart.destroy();
         }
 
+      const colorNames = {
+        "aliceblue": [240, 248, 255],
+        "antiquewhite": [250, 235, 215],
+        "aqua": [0, 255, 255],
+        "aquamarine": [127, 255, 212],
+        "azure": [240, 255, 255],
+        "beige": [245, 245, 220],
+        "bisque": [255, 228, 196],
+        "black": [0, 0, 0],
+        "blanchedalmond": [255, 235, 205],
+        "blue": [0, 0, 255],
+        "blueviolet": [138, 43, 226],
+        "brown": [165, 42, 42],
+        "burlywood": [222, 184, 135],
+        "cadetblue": [95, 158, 160],
+        "chartreuse": [127, 255, 0],
+        "chocolate": [210, 105, 30],
+        "coral": [255, 127, 80],
+        "cornflowerblue": [100, 149, 237],
+        "cornsilk": [255, 248, 220],
+        "crimson": [220, 20, 60],
+        "cyan": [0, 255, 255],
+        "darkblue": [0, 0, 139],
+        "darkcyan": [0, 139, 139],
+        "darkgoldenrod": [184, 134, 11],
+        "darkgray": [169, 169, 169],
+        "darkgreen": [0, 100, 0],
+        "darkgrey": [169, 169, 169],
+        "darkkhaki": [189, 183, 107],
+        "darkmagenta": [139, 0, 139],
+        "darkolivegreen": [85, 107, 47],
+        "darkorange": [255, 140, 0],
+        "darkorchid": [153, 50, 204],
+        "darkred": [139, 0, 0],
+        "darksalmon": [233, 150, 122],
+        "darkseagreen": [143, 188, 143],
+        "darkslateblue": [72, 61, 139],
+        "darkslategray": [47, 79, 79],
+        "darkslategrey": [47, 79, 79],
+        "darkturquoise": [0, 206, 209],
+        "darkviolet": [148, 0, 211],
+        "deeppink": [255, 20, 147],
+        "deepskyblue": [0, 191, 255],
+        "dimgray": [105, 105, 105],
+        "dimgrey": [105, 105, 105],
+        "dodgerblue": [30, 144, 255],
+        "firebrick": [178, 34, 34],
+        "floralwhite": [255, 250, 240],
+        "forestgreen": [34, 139, 34],
+        "fuchsia": [255, 0, 255],
+        "gainsboro": [220, 220, 220],
+        "ghostwhite": [248, 248, 255],
+        "gold": [255, 215, 0],
+        "goldenrod": [218, 165, 32],
+        "gray": [128, 128, 128],
+        "green": [0, 128, 0],
+        "greenyellow": [173, 255, 47],
+        "grey": [128, 128, 128],
+        "honeydew": [240, 255, 240],
+        "hotpink": [255, 105, 180],
+        "indianred": [205, 92, 92],
+        "indigo": [75, 0, 130],
+        "ivory": [255, 255, 240],
+        "khaki": [240, 230, 140],
+        "lavender": [230, 230, 250],
+        "lavenderblush": [255, 240, 245],
+        "lawngreen": [124, 252, 0],
+        "lemonchiffon": [255, 250, 205],
+        "lightblue": [173, 216, 230],
+        "lightcoral": [240, 128, 128],
+        "lightcyan": [224, 255, 255],
+        "lightgoldenrodyellow": [250, 250, 210],
+        "lightgray": [211, 211, 211],
+        "lightgreen": [144, 238, 144],
+        "lightgrey": [211, 211, 211],
+        "lightpink": [255, 182, 193],
+        "lightsalmon": [255, 160, 122],
+        "lightseagreen": [32, 178, 170],
+        "lightskyblue": [135, 206, 250],
+        "lightslategray": [119, 136, 153],
+        "lightslategrey": [119, 136, 153],
+        "lightsteelblue": [176, 196, 222],
+        "lightyellow": [255, 255, 224],
+        "lime": [0, 255, 0],
+        "limegreen": [50, 205, 50],
+        "linen": [250, 240, 230],
+        "magenta": [255, 0, 255],
+        "maroon": [128, 0, 0],
+        "mediumaquamarine": [102, 205, 170],
+        "mediumblue": [0, 0, 205],
+        "mediumorchid": [186, 85, 211],
+        "mediumpurple": [147, 112, 219],
+        "mediumseagreen": [60, 179, 113],
+        "mediumslateblue": [123, 104, 238],
+        "mediumspringgreen": [0, 250, 154],
+        "mediumturquoise": [72, 209, 204],
+        "mediumvioletred": [199, 21, 133],
+        "midnightblue": [25, 25, 112],
+        "mintcream": [245, 255, 250],
+        "mistyrose": [255, 228, 225],
+        "moccasin": [255, 228, 181],
+        "navajowhite": [255, 222, 173],
+        "navy": [0, 0, 128],
+        "oldlace": [253, 245, 230],
+        "olive": [128, 128, 0],
+        "olivedrab": [107, 142, 35],
+        "orange": [255, 165, 0],
+        "orangered": [255, 69, 0],
+        "orchid": [218, 112, 214],
+        "palegoldenrod": [238, 232, 170],
+        "palegreen": [152, 251, 152],
+        "paleturquoise": [175, 238, 238],
+        "palevioletred": [219, 112, 147],
+        "papayawhip": [255, 239, 213],
+        "peachpuff": [255, 218, 185],
+        "peru": [205, 133, 63],
+        "pink": [255, 192, 203],
+        "plum": [221, 160, 221],
+        "powderblue": [176, 224, 230],
+        "purple": [128, 0, 128],
+        "rebeccapurple": [102, 51, 153],
+        "red": [255, 0, 0],
+        "rosybrown": [188, 143, 143],
+        "royalblue": [65, 105, 225],
+        "saddlebrown": [139, 69, 19],
+        "salmon": [250, 128, 114],
+        "sandybrown": [244, 164, 96],
+        "seagreen": [46, 139, 87],
+        "seashell": [255, 245, 238],
+        "sienna": [160, 82, 45],
+        "silver": [192, 192, 192],
+        "skyblue": [135, 206, 235],
+        "slateblue": [106, 90, 205],
+        "slategray": [112, 128, 144],
+        "slategrey": [112, 128, 144],
+        "snow": [255, 250, 250],
+        "springgreen": [0, 255, 127],
+        "steelblue": [70, 130, 180],
+        "tan": [210, 180, 140],
+        "teal": [0, 128, 128],
+        "thistle": [216, 191, 216],
+        "tomato": [255, 99, 71],
+        "turquoise": [64, 224, 208],
+        "violet": [238, 130, 238],
+        "wheat": [245, 222, 179],
+        "white": [255, 255, 255],
+        "whitesmoke": [245, 245, 245],
+        "yellow": [255, 255, 0],
+        "yellowgreen": [154, 205, 50]
+      }
         var color = function(i, alpha) {
-          var colors = ['red','blue','orange','purple','maroon'];
           
+          var colors = ['red','blue','orange','purple','maroon','violet','wheat','peru','olive'];
+          var v = colorNames[colors[i]];
+          return `rgba(${v[0]}, ${v[1]}, ${v[2]}, ${alpha})`
+
           if (colors[i] == 'red') { return `rgba(32, 162, 219, ${alpha})`; }
           if (colors[i] == 'blue') { return `rgba(196, 93, 105, ${alpha})`; }
           if (colors[i] == 'orange') { return `rgba(255, 159, 64, ${alpha})`; }
@@ -443,15 +576,21 @@ TODO
           }
         }
 
+        var emptyToNull = function(arr) {
+          for (var i = 0; i < arr.length; i++) if (arr[i].length == 0) arr[i] = [null];
+          return arr;
+        }
+
+        const tooltipDecimals = 1;
         myChart = new Chart(ctx, {
+          type: 'boxplot', // need this for proper tooltips for box-and-whiskers
           data: {
             labels: data[0].x,
             datasets: function(data) {
               var sets = [];
-               var ci = 0; // color index
+              var ci = 0; // color index
               for (var k = 0; k < data.length; k++) {
                 for (var i = 0; i < data[k].y.length; i++) {
-//                  var multipleData = Array.isArray(data[k].y[0].data[0]) && data[k].y[0].data[0].length > 1;
                   var multipleData = (function(data) { 
                     var ret = false; // default single point data (line plot)
                     for (var i = 0; i < data.data.length; i++) {
@@ -461,7 +600,7 @@ TODO
                   })(data[k].y[i])
                   sets.push({
                     label: displayName(data[k].y[i].label + ", " + data[k].domain),
-                    data: (data[k].y[i].data.length > 0 ? data[k].y[i].data : null),
+                    data: emptyToNull(data[k].y[i].data),
                     lineTension: 0.3,
                     borderWidth: 2,
                     backgroundColor: function() { return (multipleData) ? color(ci, 0.1) : 'transparent'; }(),
@@ -477,7 +616,8 @@ TODO
             }(data),
           },
           options: {
-            spanGaps: true,
+            responsive: true,
+            spanGaps: false,
             scales: {
               xAxes: [{
                 type: 'time',
@@ -493,6 +633,32 @@ TODO
             },
             legend: {
               display: true,
+            },
+            tooltipDecimals: tooltipDecimals,
+            tooltips: {
+              callbacks: {
+                boxplotLabel: function(item, data, b, hoveredOutlierIndex) {
+                  const datasetLabel = data.datasets[item.datasetIndex].label || '';
+//                  let label = datasetLabel + " " + (typeof item.xLabel === 'string') ? item.xLabel : item.yLabel;
+                  let label = datasetLabel 
+
+                  if (!b) {
+                    return `${label} + (NaN)`;
+                  }
+
+                  if (b.min == b.max) {
+                    return `${label}: ${b.min.toFixed(tooltipDecimals)}`;
+                  }
+
+                  if (hoveredOutlierIndex >= 0) {
+                    const outlier = b.outliers[hoveredOutlierIndex];
+                    return `${label} (outlier: ${toFixed.call(this, outlier)})`;
+                  }
+                  return `${label} (min: ${b.min.toFixed(tooltipDecimals)} q1: ${b.q1.toFixed(tooltipDecimals)}, median: ${b.median.toFixed(tooltipDecimals)} q3: ${b.q3.toFixed(tooltipDecimals)} max: ${b.max.toFixed(tooltipDecimals)})`;
+
+//                  return `${label} (min: ${b.min.toFixed()}, q1: ${toFixed.call(this, b.q1)}, median: ${toFixed.call(this, b.median)}, q3: ${toFixed.call(this, b.q3)}, max: ${toFixed.call(this, b.max)})`;
+                }
+              }
             }
           }
         });
