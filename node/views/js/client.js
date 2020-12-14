@@ -639,7 +639,6 @@
               callbacks: {
                 boxplotLabel: function(item, data, b, hoveredOutlierIndex) {
                   const datasetLabel = data.datasets[item.datasetIndex].label || '';
-//                  let label = datasetLabel + " " + (typeof item.xLabel === 'string') ? item.xLabel : item.yLabel;
                   let label = datasetLabel 
 
                   if (!b) {
@@ -652,11 +651,10 @@
 
                   if (hoveredOutlierIndex >= 0) {
                     const outlier = b.outliers[hoveredOutlierIndex];
-                    return `${label} (outlier: ${toFixed.call(this, outlier)})`;
+                    return `${label} (outlier: ${outlier.toFixed(tooltipDecimals)})`;
                   }
                   return `${label} (min: ${b.min.toFixed(tooltipDecimals)} q1: ${b.q1.toFixed(tooltipDecimals)}, median: ${b.median.toFixed(tooltipDecimals)} q3: ${b.q3.toFixed(tooltipDecimals)} max: ${b.max.toFixed(tooltipDecimals)})`;
 
-//                  return `${label} (min: ${b.min.toFixed()}, q1: ${toFixed.call(this, b.q1)}, median: ${toFixed.call(this, b.median)}, q3: ${toFixed.call(this, b.q3)}, max: ${toFixed.call(this, b.max)})`;
                 }
               }
             }
