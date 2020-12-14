@@ -393,7 +393,7 @@
           myChart.destroy();
         }
 
-      const colorNames = {
+        const colorNames = {
         "aliceblue": [240, 248, 255],
         "antiquewhite": [250, 235, 215],
         "aqua": [0, 255, 255],
@@ -542,19 +542,12 @@
         "whitesmoke": [245, 245, 245],
         "yellow": [255, 255, 0],
         "yellowgreen": [154, 205, 50]
-      }
+        }
         var color = function(i, alpha) {
           
           var colors = ['red','blue','orange','purple','maroon','violet','wheat','peru','olive'];
           var v = colorNames[colors[i]];
           return `rgba(${v[0]}, ${v[1]}, ${v[2]}, ${alpha})`
-
-          if (colors[i] == 'red') { return `rgba(32, 162, 219, ${alpha})`; }
-          if (colors[i] == 'blue') { return `rgba(196, 93, 105, ${alpha})`; }
-          if (colors[i] == 'orange') { return `rgba(255, 159, 64, ${alpha})`; }
-          if (colors[i] == 'purple') { return `rgba(153, 102, 255, ${alpha})`; }
-          if (colors[i] == 'maroon') { return `rgba(75, 192, 192, ${alpha})`; }
-
         };
 
         // sometimes boxplot y axis scaling is not optimal... some values are extending
