@@ -659,6 +659,7 @@
         if (name == "TG-C") return "Ground Temperature";
         if (name == "FFG-MS") return "Wind Gust";
         if (name == "FF500-MS") return "Wind Speed 500m agl";
+        if (name == "DD500-D") return "Wind Direction 500m agl";
         if (name == "RRR-KGM2") return "Hourly Total Precipitation";
         if (name == "sum_t(RRR-KGM2/24h)") return "24 Hour Total Precipitation";
         if (name == "SNR-KGM2") return "Hourly Snow Fall";
