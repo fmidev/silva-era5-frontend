@@ -99,6 +99,14 @@
           )
         );
 
+        dates = dates.filter(function (date) {
+          return date[2].length > 0;
+        });
+
+        if (dates.length == 0) {
+          alert("No valid dates")
+          return;
+        }
         var proglen = dates.length + 1;
 
         $(".progress-bar").css('width', (100 / proglen) + "%").attr('aria-valuenow', 1 / (proglen));
