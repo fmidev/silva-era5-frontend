@@ -577,11 +577,12 @@
           }
         }
 
+/*
         var emptyToNull = function(arr) {
           for (var i = 0; i < arr.length; i++) if (arr[i].length == 0) arr[i] = [null];
           return arr;
         }
-
+*/
         const tooltipDecimals = 1;
         myChart = new Chart(ctx, {
           type: 'boxplot', // need this for proper tooltips for box-and-whiskers
@@ -601,7 +602,7 @@
                   })(data[k].y[i])
                   sets.push({
                     label: displayName(data[k].y[i].label + ", " + data[k].domain),
-                    data: emptyToNull(data[k].y[i].data),
+                    data: data[k].y[i].data, //emptyToNull(data[k].y[i].data),
                     lineTension: 0.3,
                     borderWidth: 2,
                     backgroundColor: function() { return (multipleData) ? color(ci, 0.1) : 'transparent'; }(),
