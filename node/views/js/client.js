@@ -67,7 +67,7 @@
           for (var i = 0; i < elems.length; i++) {
             if (elems[i].toString().search("-") >= 0) {
               var range = elems[i].split('-');
-              for (var j = range[0]; j <= range[1]; j++) {
+              for (var j = parseInt(range[0]); j <= parseInt(range[1]); j++) {
                 ret.push(parseInt(j));
               }
             } else {
