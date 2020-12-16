@@ -302,7 +302,23 @@
         return ret
       }
 
-      function getAreaAggregation(str) {
+      function mod360mean(arr) {
+        var s = 0, c = 0;
+        for (var i = 0; i < arr.length; i++) {
+          s += Math.sin(arr[i] * 0.0174532925)
+          c += Math.cos(arr[i] * 0.0174532925)
+        }
+        s /= arr.length;
+        c /= arr.length;
+        o = 0
+
+        if (c < 0) o = 180;
+        else if (s < 0 && c > 0) o = 360;
+        return o + Math.atan(s / c) * 57.2957795;
+      }
+
+      function getAreaAggregation(str, param) {
+        if (param == "DD500-D" && str == "mean") { return mod360mean; }
         if (str == "min") return function(data) { return Math.min.apply(Math, data.map(function(o) { return o == null ? +Infinity : o; })); };
         if (str == "max") return function(data) { return Math.max.apply(Math, data.map(function(o) { return o == null ? -Infinity : o; })); };
         if (str == "mean") return function(data) { var val = data.reduce(function(acc, val) { return acc + val; }, 0) / data.length; if (val == val) return val; return null; };
@@ -312,13 +328,14 @@
       function areaAggregate(str, data) {
         if (str == "none") return data;
 
-        var op = getAreaAggregation(str);
         var ret = []
         for (var k = 0; k < data.length; k++) {
           var aggregated = { 'domain': data[k].domain, 'x': data[k].x, 'y': [] };
 
           for (var i = 0; i < data[k].y.length; i++) {
             var flt = {'label' : data[k].y[i].label, 'data': []}
+            var op = getAreaAggregation(str, flt.label);
+
             for (var j = 0; j < data[k].y[i].data.length; j++) {
               flt.data.push(removeNulls([op(data[k].y[i].data[j])]));
             }
@@ -374,18 +391,16 @@
                 labels.push(label); 
                 label = data[k].x[j]; 
                 curday = day;
-
-                y[i].data.push([getAreaAggregation(aggOp)(dayvals)]);
+                y[i].data.push([getAreaAggregation(aggOp, data[k].y[i].label)(dayvals)]);
                 dayvals = [];
               }
             }
 
             labels.push(label);
-            y[i].data.push([getAreaAggregation(aggOp)(dayvals)]);
+            y[i].data.push([getAreaAggregation(aggOp, data[k].y[i].label)(dayvals)]);
 
           }
           ret.push({x : labels, y: y, domain: data[k].domain});
-
         }
         return ret;
       }
