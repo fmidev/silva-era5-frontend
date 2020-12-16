@@ -55,24 +55,24 @@
                 <div class="form-row">
                   <div class="form-group col-md-3">
                     <label for="selectedYears">Years&nbsp;<span data-feather="info" data-toggle='tooltip' title='Select years between 1979-2019. Years can be separated with comma or dash. Dash can be used to fill a range. For example 1979,1980,1981-1983 will fetch from five distinct years. Only ascending ranges are supported.'></span></label>
-                    <input type="text" class="form-control write" id="selectedYears" value="1979">
+                    <input type="text" class="form-control write" id="selectedYears" placeholder="Year(s)">
                   </div>
                   <div class="form-group col-md-2">
                     <label for="selectedMonths">Months&nbsp;<span data-feather="info" data-toggle='tooltip' title='Select months between 1 and 12. Months can be separated with comma or dash. Dash can be used to fill a range. For example 1-12 will fetch all months. Only ascending ranges are supported.'></label>
-                    <input type="text" class="form-control write" id="selectedMonths" value="1,2">
+                    <input type="text" class="form-control write" id="selectedMonths" placeholder='Month(s)'>
                   </div>
                   <div class="form-group col-md-2">
                     <label for="selectedDays">Days&nbsp;<span data-feather="info" data-toggle='tooltip' title='Select days between 1 and 31. Invalid days are discared silently. Months can be separated with comma or dash. Dash can be used to fill a range. For example 1-31 will fetch all days. Only ascending ranges are supported.'></span></label>
-                    <input type="text" class="form-control write" id="selectedDays" value="10-11">
+                    <input type="text" class="form-control write" id="selectedDays" placeholder='Day(s)'>
                   </div>
                 </div>
                 <div class='form-row' id="inputParameter0Div">
                   <div class='form-group col-md-4'>
                     <label for="inputParameter0">Parameter&nbsp;<span data-feather="info" data-toggle='tooltip' title='Select one or more parameters. Clicking + or - will add or remove parameters.'></span></label>
                     <select id="inputParameter0" class='form-control write'>
-                    <option value='none'>Choose...</option>
+                    <option value='none' selected>Choose...</option>
                     <option value='TG-C'>Ground Temperature</option>
-                    <option value='FFG-MS' selected>Wind Gust</option>
+                    <option value='FFG-MS'>Wind Gust</option>
                     <option value='FF500-MS'>Wind Speed at 500m agl</option>
                     <option value='DD500-D'>Wind Direction at 500m agl</option>
                     <option value='RRR-KGM2'>Hourly precipitation</option>
