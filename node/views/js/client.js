@@ -862,4 +862,7 @@
           if (parseInt(last.prop("id").match(/\d+/g), 10) > 0) { last.remove(); }
           $("#era").data("changed",true);
         };
+
+        // initialize tooltips
+        $('[data-toggle="tooltip"]').tooltip();
       }
