@@ -314,14 +314,14 @@
 
         if (c < 0) o = 180;
         else if (s < 0 && c > 0) o = 360;
-        return o + Math.atan(s / c) * 57.2957795;
+        return Math.round((o + Math.atan(s / c) * 57.2957795));
       }
 
       function getAreaAggregation(str, param) {
         if (param == "DD500-D" && str == "mean") { return mod360mean; }
         if (str == "min") return function(data) { return Math.min.apply(Math, data.map(function(o) { return o == null ? +Infinity : o; })); };
         if (str == "max") return function(data) { return Math.max.apply(Math, data.map(function(o) { return o == null ? -Infinity : o; })); };
-        if (str == "mean") return function(data) { var val = data.reduce(function(acc, val) { return acc + val; }, 0) / data.length; if (val == val) return val; return null; };
+        if (str == "mean") return function(data) { var val = data.reduce(function(acc, val) { return acc + val; }, 0) / data.length; if (val == val) return Math.round(val * 10) / 10; return null; };
         if (str == "none") return function(data) { return data; };
       }
 
