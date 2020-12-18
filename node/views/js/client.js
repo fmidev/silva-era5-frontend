@@ -836,6 +836,16 @@
             clone.find("#inputParameter" + (next-1) + 'ConditionValue').attr('id', 'inputParameter' + next + 'ConditionValue');
             clone.find("#inputParameter" + (next) + "ConditionValue").val("");
 
+            clone.find("#inputParameter" + next).change(function() {
+              $("#era").data("changed",true);
+            });
+            clone.find("#inputParameter" + next + "Condition").change(function() {
+              $("#era").data("changed",true);
+            });
+            clone.find("#inputParameter" + next + "ConditionValue").on('change keyup paste', function() {
+              $("#era").data("changed",true);
+            });
+
             last.after(clone);
             $("#era").data("changed",true);
           }
