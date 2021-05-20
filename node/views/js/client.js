@@ -145,7 +145,7 @@
       });
 
       function getDataUrl(domain, paramstr, ts) {
-        var api_url = "http://archive.nest.fmi.fi/timeseries?";
+        var api_url = "https://SMARTMET_SERVER_URL/timeseries?";
 
         var year = ts[0];
         var month = ts[1];
@@ -758,7 +758,7 @@
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         prefetch: null, 
         remote: {
-          url: "http://archive.nest.fmi.fi/autocomplete?keyword=ajax_fi_fi&max=10&pattern=%Q",
+          url: "https://SMARTMET_SERVER_URL/autocomplete?keyword=ajax_fi_fi&max=10&pattern=%Q",
           wildcard: "%Q",
           transform: function(response){
             return response.autocomplete.result
